@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"31","delays":"47","cancellations":"0","airportsServed":"182","routes":[{"route":"SZX – SHA","count":"297"},{"route":"SZX – HGH","count":"234"},{"route":"SZX – PEK","count":"213"}],"totalFlights":"182","takeoffs":"4,319","landings":"2,695","disruptionIndex":"2.8"}}

@@ -1,0 +1,16 @@
+{
+  "name": "SkyTrack Aviation",
+  "short_name": "SkyTrack",
+  "description": "Live Flight Tracker Application",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#060d1b",
+  "theme_color": "#10192c",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/723/723875.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
