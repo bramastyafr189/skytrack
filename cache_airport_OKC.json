@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"37","delays":"49 (27%)","cancellations":"8 (4%)","airportsServed":"117","routes":[{"route":"OKC – DFW","count":"57"},{"route":"OKC – DEN","count":"57"},{"route":"OKC – IAH","count":"50"}],"countriesServed":"4","totalFlights":"1,423","takeoffs":"732","landings":"691","disruptionIndex":"3.8"}}

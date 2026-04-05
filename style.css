@@ -294,11 +294,20 @@ body {
 .modal-content {
     background: var(--bg-surface);
     width: 100%;
-    height: 75vh;
+    height: 80vh;
     border-radius: 24px 24px 0 0;
-    padding: 24px;
+    padding: 24px 24px 0 24px;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: 24px;
+    padding-right: 4px;
 }
 
 .modal.active .modal-content {
@@ -567,3 +576,386 @@ body {
 .stat-cancel { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .stat-delay { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .stat-serve { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+/* Autocomplete Styles */
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-surface-light);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.suggestion-item:hover {
+    background: rgba(14, 165, 233, 0.15);
+}
+
+.suggestion-item strong {
+    color: var(--accent-blue-light);
+    font-family: var(--code-font);
+}
+
+/* Date Picker Fixes */
+.custom-date-input {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 48px;
+    position: relative;
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* Make the icon white */
+    opacity: 0.6;
+    cursor: pointer;
+    background-size: contain;
+}
+
+.custom-date-input:focus::-webkit-calendar-picker-indicator {
+    opacity: 1;
+}
+
+/* Ticket Detail Badges */
+.flight-details-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.detail-badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+}
+
+.badge-emissions.low {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.badge-aircraft {
+    color: #a5b4fc;
+}
+
+.badge-legroom {
+    color: #fca5a5;
+}
+
+/* ==============================
+   Expandable Ticket Card Styles
+   ============================== */
+.ticket-card-expandable {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ticket-card-expandable:hover {
+    border-color: rgba(255,255,255,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.ticket-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.ticket-detail-panel {
+    animation: fadeSlideIn 0.2s ease;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.stops-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.badge-nonstop {
+    color: #10b981;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.25);
+}
+
+.badge-transit {
+    color: #f59e0b;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.25);
+}
+
+.booking-cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+    border: 1px solid rgba(99,102,241,0.4);
+    border-radius: 8px;
+    color: #a5b4fc;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.1s;
+}
+
+.booking-cta-btn:hover {
+    background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.35));
+    transform: translateY(-1px);
+}
+
+.booking-cta-btn:active {
+    transform: translateY(0);
+}
+
+/* ==============================
+   Ticket Form Styles
+   ============================== */
+.ticket-form-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.field-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 7px;
+}
+
+.ticket-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ticket-input-wrapper:focus-within,
+.ticket-input-wrapper:hover {
+    border-color: rgba(99,102,241,0.5);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+}
+
+.date-display-wrapper {
+    cursor: pointer;
+}
+
+.input-icon {
+    font-size: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.ticket-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: var(--code-font);
+    font-size: 14px;
+    min-width: 0;
+}
+
+.ticket-input::placeholder { color: var(--text-dim, rgba(255,255,255,0.25)); }
+
+/* Date input hidden behind styled display */
+.hidden-date-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 1px;
+    height: 1px;
+}
+
+.search-flight-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 4px;
+}
+
+.search-flight-btn:hover { opacity: 0.9; }
+.search-flight-btn:active { transform: scale(0.98); }
+.search-flight-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Improved suggestion items */
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+}
+
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: rgba(99,102,241,0.12); }
+
+.sug-code {
+    font-family: var(--code-font);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-blue-light);
+    min-width: 36px;
+}
+
+.sug-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sug-city {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+/* ==============================
+   Flight Spec Grid & Amenities
+   ============================== */
+.spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.spec-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.spec-value {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.amenity-icon-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 6px;
+    min-width: 45px;
+    color: var(--accent-blue-light);
+}
+
+.amenity-icon-wrapper ion-icon {
+    font-size: 16px;
+}
+
+/* Responsive adjustments for the grid */
+@media (max-width: 600px) {
+    .ticket-detail-panel > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ==============================
+   Refresh Results Button
+   ============================== */
+.btn-refresh-results {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-refresh-results:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.btn-refresh-results:active {
+    transform: translateY(0);
+}
+
+.btn-refresh-results ion-icon {
+    font-size: 14px;
+    color: var(--accent-blue-light);
+}
+
+.btn-refresh-results:hover ion-icon {
+    animation: rotate-sync 1s linear infinite;
+}
+
+@keyframes rotate-sync {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"51","delays":"77 (37%)","cancellations":"4 (2%)","airportsServed":"110","routes":[{"route":"GRR – ORD","count":"87"},{"route":"GRR – DTW","count":"42"},{"route":"GRR – ATL","count":"29"}],"countriesServed":"4","totalFlights":"1,302","takeoffs":"664","landings":"638","disruptionIndex":"2.7"}}

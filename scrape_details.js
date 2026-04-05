@@ -25,19 +25,40 @@ const puppeteer = require('puppeteer');
         
         // Go to specific flight page
         const url = `https://www.flightradar24.com/${callsign}`;
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 40000 });
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 50000 });
         
-        // Wait for basic sidebar info
-        await page.waitForSelector('.bg-gray-700, .bg-gray-800', { timeout: 10000 }).catch(() => {});
+        // Wait for the aircraft panel to be definitely present
+        await page.waitForSelector('[data-testid="aircraft-panel"]', { timeout: 20000 }).catch(() => {
+             console.error("Timeout waiting for aircraft-panel");
+        });
         
-        const details = await page.evaluate(() => {
+        // Final settle time
+        await new Promise(r => setTimeout(r, 2000));
+        
+        const details = await page.evaluate(async () => {
             const getTid = (tid) => {
                 const el = document.querySelector(`[data-testid="${tid}"]`);
-                return el ? el.innerText.trim() : null;
+                if (el && el.innerText.trim() !== "") {
+                    return el.innerText.trim();
+                }
+                return null;
             };
 
-            const registration = getTid("aircraft-panel__registration");
+            // Recursive wait for specific elements if they aren't there yet
+            const waitForData = async (tid, retries = 5) => {
+                for (let i = 0; i < retries; i++) {
+                   const val = getTid(tid);
+                   if (val) return val;
+                   await new Promise(r => setTimeout(r, 500));
+                }
+                return null;
+            };
+
+            const registration = await waitForData("aircraft-panel__registration");
             const model = getTid("aircraft-panel__model");
+            
+            const callsign = getTid("aircraft-panel__header__callsign");
+            const flightNumber = getTid("aircraft-panel__header__flight-number");
             
             // Labels for MSN and Age are more varied, keep generic lookup
             const getByLabel = (labelStr) => {
@@ -59,9 +80,15 @@ const puppeteer = require('puppeteer');
             const actualDep = getTid("aircraft-panel__actual-departure") || "-";
             const estimatedArr = getTid("aircraft-panel__estimated-arrival") || "-";
             
-            // Progress Bar
-            const progressEl = document.querySelector('.bg-blue-500.h-1');
+            // Wait for 2.5s for React progress bar animation to complete locally via headless paint
+            await new Promise(r => setTimeout(r, 2500));
+            
+            // Progress Bar (can be blue or yellow depending on status)
+            const progressEl = document.querySelector('.bg-blue-500.h-1, .bg-yellow-500.h-1, .h-1[style*="width"]');
             const progress = progressEl ? progressEl.style.width : "0%";
+            
+            const elapsed = getTid("aircraft-panel__flight-time-elapsed") || "-";
+            const remaining = (getTid("aircraft-panel__flight-time-remaining") || "").replace(/\n/g, ' ').trim() || "-";
 
             return {
                 registration,
@@ -72,7 +99,11 @@ const puppeteer = require('puppeteer');
                 scheduledArr,
                 actualDep,
                 estimatedArr,
-                progress
+                progress,
+                elapsed,
+                remaining,
+                callsign,
+                flightNumber
             };
         });
 

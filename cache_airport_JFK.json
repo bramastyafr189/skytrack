@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"23","delays":"691 (51%)","cancellations":"3 (0%)","airportsServed":"230","routes":[{"route":"JFK – LAX","count":"197"},{"route":"JFK – LHR","count":"138"},{"route":"JFK – SFO","count":"126"}],"totalFlights":"8,723","takeoffs":"4,392","landings":"4,331","disruptionIndex":"2.0"}}

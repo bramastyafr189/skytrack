@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"49","delays":"0 (0%)","cancellations":"42 (2%)","airportsServed":"298","routes":[{"route":"ORD – LGA","count":"192"},{"route":"ORD – MCO","count":"144"},{"route":"ORD – DFW","count":"129"}],"countriesServed":"50","totalFlights":"17,014","takeoffs":"8,513","landings":"8,501","disruptionIndex":"4.0"}}

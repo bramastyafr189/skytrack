@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"35","delays":"91 (34%)","cancellations":"10 (4%)","airportsServed":"133","routes":[{"route":"MKE – ORD","count":"105"},{"route":"MKE – MCO","count":"43"},{"route":"MKE – ATL","count":"41"}],"countriesServed":"7","totalFlights":"1,838","takeoffs":"912","landings":"926","disruptionIndex":"3.3"}}

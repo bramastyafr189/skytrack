@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"28","delays":"175 (24%)","cancellations":"0 (0%)","airportsServed":"114","routes":[{"route":"TPE – HKG","count":"301"},{"route":"TPE – NRT","count":"169"},{"route":"TPE – KIX","count":"142"}],"countriesServed":"33","totalFlights":"5,183","takeoffs":"2,608","landings":"2,575","disruptionIndex":"2.4"}}

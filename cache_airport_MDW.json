@@ -1,0 +1,1 @@
+{"success":true,"data":{"avgDelay":"30","delays":"234 (41%)","cancellations":"18 (3%)","airportsServed":"220","routes":[{"route":"MDW – PHX","count":"66"},{"route":"MDW – ATL","count":"65"},{"route":"MDW – MCO","count":"65"}],"countriesServed":"11","totalFlights":"3,914","takeoffs":"1,947","landings":"1,967","disruptionIndex":"2.6"}}
