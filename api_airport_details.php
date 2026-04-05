@@ -12,7 +12,7 @@ if (!$iata) {
     exit;
 }
 
-$cacheFile = "cache_airport_" . strtoupper($iata) . ".json";
+$cacheFile = "cache/cache_airport_" . strtoupper($iata) . ".json";
 $cacheTime = 900; // 15 minutes cache for airport details
 
 // Return cache if valid and not forced

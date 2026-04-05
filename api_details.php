@@ -12,7 +12,7 @@ if (!$callsign) {
     exit;
 }
 
-$cacheFile = "cache_details_" . strtoupper($callsign) . ".json";
+$cacheFile = "cache/cache_details_" . strtoupper($callsign) . ".json";
 $cacheTime = 600; // 10 minutes cache for specific flight details
 
 // Return cache if valid and not forced

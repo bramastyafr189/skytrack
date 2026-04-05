@@ -19,7 +19,7 @@ if (strtotime($date) < strtotime(date('Y-m-d'))) {
     exit;
 }
 
-$cacheKey = "tickets_{$origin}_{$dest}_{$date}.json";
+$cacheKey = "cache/tickets_{$origin}_{$dest}_{$date}.json";
 $cacheTime = 3600; // 1 hour cache for exact search queries
 $force = isset($_GET['force']) && $_GET['force'] === '1';
 

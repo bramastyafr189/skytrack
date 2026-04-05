@@ -1,1 +1,0 @@
-{"success":true,"data":{"avgDelay":"15","delays":"23 (15%)","cancellations":"16 (10%)","airportsServed":"26","routes":[{"route":"KOJ – HND","count":"154"},{"route":"KOJ – ITM","count":"43"},{"route":"KOJ – KUM","count":"34"}],"countriesServed":"5","totalFlights":"957","takeoffs":"486","landings":"471","disruptionIndex":"2.5"}}

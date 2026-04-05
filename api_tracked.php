@@ -7,7 +7,7 @@ header("Content-Type: application/json");
 // Naikkan limit waktu eksekusi PHP (Default 30s seringkali tidak cukup untuk Puppeteer)
 set_time_limit(60);
 
-$cacheFile = 'cache_tracked.json';
+$cacheFile = 'cache/cache_tracked.json';
 $cacheTime = 300; // 5 menit dalam detik
 $forceRefresh = isset($_GET['force']) && $_GET['force'] == '1';
 

@@ -4,7 +4,7 @@ require_once 'node_helper.php';
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-$cacheFile = 'cache_global_stats.json';
+$cacheFile = 'cache/cache_global_stats.json';
 $cacheTime = 300; // 5 minutes
 
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {

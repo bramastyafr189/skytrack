@@ -1,1 +1,0 @@
-{"success":true,"data":{"avgDelay":"20","delays":"104 (20%)","cancellations":"8 (2%)","airportsServed":"168","routes":[{"route":"DXB – JED","count":"53"},{"route":"DXB – DEL","count":"48"},{"route":"DXB – KHI","count":"46"}],"countriesServed":"83","totalFlights":"2,778","takeoffs":"1,607","landings":"1,171","disruptionIndex":"2.2"}}
