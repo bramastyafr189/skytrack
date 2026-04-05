@@ -1,4 +1,6 @@
 <?php
+require_once 'node_helper.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -28,7 +30,8 @@ if (!$force && file_exists($cacheKey) && (time() - filemtime($cacheKey) < $cache
 
 // Trigger Puppeteer
 set_time_limit(90);
-$command = "node scrape_tickets.js " . escapeshellarg($origin) . " " . escapeshellarg($dest) . " " . escapeshellarg($date);
+$nodePath = getNodePath();
+$command = $nodePath . " scrape_tickets.js " . escapeshellarg($origin) . " " . escapeshellarg($dest) . " " . escapeshellarg($date);
 $output = shell_exec($command);
 
 if ($output) {

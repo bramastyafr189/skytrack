@@ -1,4 +1,6 @@
 <?php
+require_once 'node_helper.php';
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
@@ -19,7 +21,8 @@ if (!$forceRefresh && file_exists($cacheFile) && (time() - filemtime($cacheFile)
 }
 
 // Jalankan Puppeteer Script jika cache tidak ada atau sudah usang
-$command = "node scrape_tracked.js 2>&1"; 
+$nodePath = getNodePath();
+$command = $nodePath . " scrape_tracked.js 2>&1"; 
 $output = shell_exec($command);
 
 if ($output === null) {

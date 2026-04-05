@@ -1,4 +1,6 @@
 <?php
+require_once 'node_helper.php';
+
 // Izinkan akses dari mana pun (proxy)
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
@@ -19,7 +21,8 @@ if (!$forceRefresh && file_exists($cacheFile) && (time() - filemtime($cacheFile)
 }
 
 // Jalankan Puppeteer Script jika cache usang
-$command = "node scrape_disruptions.js 2>&1"; 
+$nodePath = getNodePath();
+$command = $nodePath . " scrape_disruptions.js 2>&1"; 
 $output = shell_exec($command);
 
 // Jika terjadi error pada eksekusi bash
