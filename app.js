@@ -7,6 +7,9 @@ let latestEmergencies = []; // Store active emergencies (7700/7600)
 let latestTopModels = []; // Store top aircraft models
 let latestTopAirlines = []; // Store top airlines
 let latestTopBrands = []; // Store top manufacturers
+let latestTopTracked = []; // Store top tracked flights
+let latestGlobalStats = { last24h: 0, avg7d: 0, trend: 0 }; // Store global stats
+let latestPopularRoutes = { origins: [], destinations: [] }; // Store route stats
 let isGlobalStatsUpdating = false; // Track update state for UI
 
 // Helper to format airline names from ICAO codes
@@ -202,7 +205,8 @@ async function loadRealData(isManual = false) {
     } catch (error) {
         console.error("Failed to load flight data:", error);
         if (isManual) {
-            flightListEl.innerHTML = `<p style="text-align:center; color: var(--status-delayed); margin-top:40px;">Gagal memuat data live. Mencoba lagi dalam 5 menit.</p>`;
+            showToast("Gagal memuat data live. Mencoba lagi dalam 5 menit.", "error");
+            renderFlights(flights, false); // Keep existing data
         }
     }
 }
@@ -841,7 +845,8 @@ async function searchTickets(isRefresh = false) {
         }
     } catch (e) {
         console.error("Search failed:", e);
-        resultsDiv.innerHTML = `<p style="color:#fca5a5; text-align:center;">Search failed. An error occurred on the server.</p>`;
+        showToast("Search failed. An error occurred on the server.", "error");
+        resultsDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);"><ion-icon name="cloud-offline-outline" style="font-size:32px;"></ion-icon><p>Server sedang sibuk atau koneksi terputus.</p></div>`;
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<ion-icon name="search-outline"></ion-icon> Search Flights`;
@@ -1019,6 +1024,7 @@ const ALL_AIRPORTS = [
     { code:'ADD', name:'Addis Ababa Bole International', city:'Addis Ababa', country:'Ethiopia', keywords:['addis ababa','bole','ethiopia','ethiopian airlines'] },
     { code:'SVO', name:'Sheremetyevo International', city:'Moscow', country:'Russia', keywords:['moscow','svo','sheremetyevo','russia'] },
     { code:'SEA', name:'Seattle-Tacoma International', city:'Seattle', country:'USA', keywords:['seattle','tacoma','sea-tac','washington','usa'] },
+    { code:'IAD', name:'Washington Dulles International', city:'Washington, D.C.', country:'USA', keywords:['washington','dulles','iad','virginia','dc'] },
     { code:'BOS', name:'Logan International', city:'Boston', country:'USA', keywords:['boston','logan','massachusetts','usa'] }
 ];
 
@@ -1412,15 +1418,15 @@ async function triggerScrape(isManual = true) {
                 renderDisruptions(disruptions, false);
             }
         } else {
-            if (isManual) alert("Scraper Error: " + (json.error || "Unknown"));
-            renderDisruptions(json.data || null, false);
+            if (isManual) showToast("Scraper Error: " + (json.error || "Unknown"), "warning");
+            renderDisruptions(disruptions, false); // Keep existing data if possible
         }
         
         if (isManual && navigator.vibrate) navigator.vibrate([20, 50, 20]);
     } catch (e) {
         console.error(e);
-        if (isManual) alert("Gagal menyambung ke Puppeteer Server!");
-        renderDisruptions(null, false);
+        if (isManual) showToast("Gagal menyambung ke Puppeteer Server!", "error");
+        renderDisruptions(disruptions, false); // Keep existing data
     }
 }
 

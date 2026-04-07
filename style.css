@@ -51,7 +51,7 @@ body {
     background: var(--bg-surface);
     padding: 20px 20px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    z-index: 10;
+    z-index: 1000; /* Above sticky tabs */
 }
 
 .header-title {
@@ -447,7 +447,7 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     border-top: 1px solid var(--bg-surface-light);
-    z-index: 20;
+    z-index: 1000; /* Above all content and sticky elements */
     padding-bottom: env(safe-area-inset-bottom);
 }
 
