@@ -90,6 +90,9 @@ const puppeteer = require('puppeteer');
             const elapsed = getTid("aircraft-panel__flight-time-elapsed") || "-";
             const remaining = (getTid("aircraft-panel__flight-time-remaining") || "").replace(/\n/g, ' ').trim() || "-";
 
+            const barometricAlt = getTid("aircraft-panel__calibrated-altitude") || getByLabel("Barometric alt.") || "-";
+            const groundSpeed = getTid("aircraft-panel__ground-speed") || getByLabel("Ground speed") || "-";
+
             return {
                 registration,
                 model,
@@ -103,7 +106,9 @@ const puppeteer = require('puppeteer');
                 elapsed,
                 remaining,
                 callsign,
-                flightNumber
+                flightNumber,
+                barometricAlt,
+                groundSpeed
             };
         });
 

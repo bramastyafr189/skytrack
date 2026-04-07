@@ -84,42 +84,147 @@ body {
 }
 
 @keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    70% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .live-text {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--status-live);
+    font-weight: 700;
+    color: #4ade80;
 }
 
-.search-bar {
-    background: var(--bg-surface-light);
-    border-radius: 12px;
+/* ================== Search Menu (FR24 Style) ================== */
+.search-container {
+    position: relative;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.search-input-wrapper {
+    position: relative;
     display: flex;
     align-items: center;
-    padding: 12px 16px;
-    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    height: 32px;
+    transition: all 0.2s ease;
+    overflow: hidden;
 }
 
-.search-bar ion-icon {
-    color: var(--text-muted);
-    font-size: 18px;
+.search-input-wrapper:focus-within {
+    border-color: #facc15; /* Yellow FR24 color */
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
 }
 
-.search-bar input {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    font-size: 14px;
+.search-icon-left {
+    position: absolute;
+    left: 10px;
+    color: #6b7280;
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.fr24-search-input {
     width: 100%;
+    height: 100%;
+    padding: 0 32px;
+    border: none;
+    background: transparent;
+    color: #111827;
+    font-size: 13px;
+    font-weight: 500;
     outline: none;
-    user-select: auto; /* allow user to type/select text here */
 }
-.search-bar input::placeholder {
-    color: var(--text-muted);
+
+.fr24-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none; /* Shown via JS */
+    color: #111827;
+}
+
+.search-dropdown.active {
+    display: block;
+}
+
+.search-category {
+    padding: 10px 14px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.search-result-item {
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+    transition: background 0.15s;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: #f3f4f6;
+}
+
+.search-result-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.search-result-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.search-result-sub {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.search-result-meta {
+    font-family: var(--code-font);
+    font-size: 12px;
+    font-weight: 700;
+    color: #0ea5e9;
+    background: rgba(14, 165, 233, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.shadow-xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
 }
 
 /* ================== Main List ================== */
@@ -813,6 +918,37 @@ body {
     height: 1px;
 }
 
+/* Style date picker to match theme */
+input[type="date"] {
+    color-scheme: dark;
+}
+
+/* Webkit browsers - Chrome, Safari, Edge */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(0.8);
+    cursor: pointer;
+}
+
+/* Date picker popup background */
+input[type="date"]::-webkit-datetime-edit {
+    color: var(--text-primary);
+    background-color: transparent;
+}
+
+/* Calendar popup styling */
+input[type="date"]::-webkit-datetime-edit-container {
+    color: var(--text-primary);
+}
+
+/* Apply dark theme to input itself when visible */
+input[type="date"]:not(.hidden-date-input) {
+    background-color: var(--bg-surface-light);
+    color: var(--text-primary);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
 .search-flight-btn {
     width: 100%;
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
@@ -958,4 +1094,99 @@ body {
 @keyframes rotate-sync {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+/* ================== Emergency & Hub Stats ================== */
+.emergency-card {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+.emergency-card:active {
+    transform: scale(0.96);
+    filter: brightness(1.2);
+}
+
+.intelligence-widget {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+}
+
+/* ================== Animations ================== */
+@keyframes scan-line {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* ================== Aero Instrument Hero Dashboard ================== */
+.hero-instrument {
+    background: linear-gradient(135deg, rgba(16, 25, 44, 0.95), rgba(6, 13, 27, 0.98));
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 24px;
+    width: 100%;
+    height: auto;
+    min-height: 110px;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(14, 165, 233, 0.05);
+}
+
+.hero-instrument::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(14, 165, 233, 0.03) 0%, transparent 70%);
+}
+
+.instrument-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--accent-blue-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.8;
+}
+
+.instrument-value {
+    font-family: var(--code-font);
+    font-size: clamp(28px, 9vw, 42px);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    text-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+    word-break: break-all;
+}
+
+.instrument-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.instrument-badge {
+    padding: 2px 8px;
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    border-radius: 4px;
+    font-size: 9px;
+    color: var(--accent-blue-light);
+    font-weight: 800;
 }

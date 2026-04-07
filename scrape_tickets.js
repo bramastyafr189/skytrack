@@ -100,146 +100,207 @@ puppeteer.use(StealthPlugin());
                     const price = priceMatch ? priceMatch[0] : "Check price";
                     const stopsText = text.includes('Nonstop') ? 'Nonstop' : (text.match(/\d+\s*stop/i) || ["-"])[0];
 
-                    // --- Segment / Leg Details (for transit flights) ---
-                    const segments = [];
-                    const segSelectors = ['.twE3dc', '.Ak5kof', '.OgQvJf', '[data-ved] .sSHqwe', '.d9P2I'];
-                    let legContainers = [];
-                    for (const sel of segSelectors) {
-                        const found = item.querySelectorAll(sel);
-                        if (found.length > 0) { legContainers = Array.from(found); break; }
-                    }
+                    // --- Segment and Layover Parsing using tvtJdb anchor elements ---
+                    // tvtJdb divs always appear between segments in a transit flight.
+                    // Strategy: split item innerText at each tvtJdb's text to isolate leg chunks.
 
+                    const segments = [];
                     let mainCabinClass = "";
                     let mainAircraft = "";
                     let mainLegroom = "";
                     let mainAmenities = [];
 
-                    legContainers.forEach(leg => {
-                        const legText = leg.innerText.trim();
-                        if (!legText || legText.length < 10) return;
-                        const legTimes = legText.match(/\d{1,2}:\d{2}\s*(?:AM|PM)/gi);
-                        if (legTimes && legTimes.length >= 2) {
-                            const airportMatch = legText.match(/([A-Z]{3})\s*[–\-]\s*([A-Z]{3})/);
-                            
-                            let cabin = "";
-                            let aircraft = "";
-                            let flightNo = "";
-                            let legAirline = "";
-                            let legroom = "";
-                            let legAmenities = [];
+                    // Helper: parse a single leg's text chunk into structured data
+                    function parseLegText(legText, fallbackAirline) {
+                        const legTimes = legText.match(/\d{1,2}:\d{2}\s*(?:AM|PM)/gi) || [];
+                        if (legTimes.length < 2) return null;
 
-                            // 1. Parse dot-separated info from .Xsgmwe with more specificity
-                            const detailNodes = leg.querySelectorAll('span.Xsgmwe');
-                            detailNodes.forEach((node, idx) => {
-                                // Sanitize text: remove &nbsp; and trim
-                                const txtString = node.innerText.replace(/\s+/g, ' ').trim();
-                                const txtLow = txtString.toLowerCase();
-                                if (!txtString) return;
+                        const airportMatch = legText.match(/([A-Z]{3})\s*[–\-]\s*([A-Z]{3})/);
+                        const aircraftMatch = legText.match(/(Boeing|Airbus|ATR|Embraer|CRJ|Bombardier)\s*[A-Z0-9-]*\s*\d{2,4}[^\n]*/i);
+                        // Flight number: 2-letter IATA code + 1-4 digits (e.g. EK 357, ID 7159)
+                        const fnMatch = legText.match(/\b([A-Z]{2})\s?(\d{1,4})\b/);
+                        const durationList = legText.match(/\d+\s*hr(?:s)?\s*\d*\s*min(?:s)?|\d+\s*hr(?:s)?/gi) || [];
 
-                                // A. Cabin check via jsname="Pvlywd"
-                                if (node.getAttribute('jsname') === 'Pvlywd') {
-                                    if (txtLow.includes('ekonomi') || txtLow.includes('economy')) cabin = "Ekonomi";
-                                    else if (txtLow.includes('bisnis') || txtLow.includes('business')) cabin = "Bisnis";
-                                    else if (txtLow.includes('premium')) cabin = "Premium Ekonomi";
-                                    else if (txtLow.includes('first') || txtLow.includes('utama')) cabin = "First Class";
-                                    return;
-                                }
+                        const cabin = (() => {
+                            const tl = legText.toLowerCase();
+                            if (tl.includes('economy')) return 'Economy';
+                            if (tl.includes('business')) return 'Business';
+                            if (tl.includes('premium')) return 'Premium Economy';
+                            if (tl.includes('first')) return 'First Class';
+                            return '';
+                        })();
 
-                                // B. Flight number check via class .sI2Nye or .QS0io
-                                const nodeClasses = node.className || "";
-                                const isFlightNoNode = nodeClasses.includes('sI2Nye') || nodeClasses.includes('QS0io');
-                                const fnMatch = txtString.match(/\b[A-Z0-9]{2}\s?\d{3,4}\b/i);
-                                
-                                if (isFlightNoNode || fnMatch) {
-                                    if (!flightNo && fnMatch) flightNo = fnMatch[0];
-                                    return;
-                                }
+                        const legAmenities = [];
+                        if (/wi[\-\s]?fi|wifi/i.test(legText)) legAmenities.push('Wi-Fi');
+                        if (/\busb\b/i.test(legText)) legAmenities.push('USB');
+                        if (/power outlet|in-seat power/i.test(legText)) legAmenities.push('Power');
+                        if (/entertainment|stream\s+media/i.test(legText)) legAmenities.push('Entertainment');
+                        if (/meal|food|beverage/i.test(legText)) legAmenities.push('Meals');
 
-                                // C. Aircraft check
-                                if (txtLow.includes('airbus') || txtLow.includes('boeing') || txtLow.includes('atr') || txtLow.includes('embraer') || /^[A-Z]\d{2,3}/.test(txtString)) {
-                                    aircraft = txtString;
-                                    return;
-                                }
-                                
-                                // D. If it's the first node and not anything else, it's likely the airline name for this leg
-                                if (idx === 0 && !cabin && !aircraft && !flightNo) {
-                                    legAirline = txtString;
-                                }
-                            });
+                        const cmMatch = legText.match(/(\d+)\s*cm(?:\s*legroom|\s*\))/i);
+                        const inMatch = legText.match(/(\d+)\s*in\s+legroom/i);
+                        const legroom = cmMatch ? cmMatch[1] + ' cm' : (inMatch ? inMatch[1] + ' in' : '');
 
-                            // Fallback for cabin if jsname wasn't present
-                            if (!cabin) {
-                                detailNodes.forEach(node => {
-                                    const txtLow = node.innerText.toLowerCase();
-                                    if (txtLow.includes('ekonomi') || txtLow.includes('economy')) cabin = "Ekonomi";
-                                    else if (txtLow.includes('bisnis') || txtLow.includes('business')) cabin = "Bisnis";
-                                });
-                            }
+                        // Duration: skip the first match in leg 0 since it may be total journey duration.
+                        // Use the LAST duration found per leg chunk (most specific).
+                        const legDuration = durationList.length > 0 ? durationList[durationList.length - 1] : '';
 
-                            // 2. Parse amenities & legroom from .WtSsrd
-                            const amenityNodes = leg.querySelectorAll('li.WtSsrd');
-                            amenityNodes.forEach(node => {
-                                const txt = node.innerText.replace(/\s+/g, ' ').trim();
-                                const txtLow = txt.toLowerCase();
-                                
-                                // Legroom (English: "30 in legroom", ID: "Ruang kaki ... (71 cm)")
-                                if (txtLow.includes('legroom') || txtLow.includes('ruang kaki')) {
-                                    const match = txt.match(/(\d+\s*in|\d+\s*cm|lebih\s*sempit|lebih\s*lega)/i);
-                                    legroom = match ? match[0] : txt;
-                                } else {
-                                    // Amenities
-                                    if (txtLow.includes('wi-fi')) legAmenities.push('Wi-Fi');
-                                    else if (txtLow.includes('daya') || txtLow.includes('power') || txtLow.includes('usb')) legAmenities.push('Power');
-                                    else if (txtLow.includes('hiburan') || txtLow.includes('entertainment')) legAmenities.push('Entertainment');
-                                    else if (txtLow.includes('makan') || txtLow.includes('food') || txtLow.includes('meal')) legAmenities.push('Meals');
-                                }
-                            });
-
-                            if (cabin && !mainCabinClass) mainCabinClass = cabin;
-                            if (aircraft && !mainAircraft) mainAircraft = aircraft;
-                            if (legroom && !mainLegroom) mainLegroom = legroom;
-                            if (legAirline && !mainAirline) mainAirline = legAirline;
-                            legAmenities.forEach(a => { if (!mainAmenities.includes(a)) mainAmenities.push(a); });
-
-                            segments.push({
-                                depTime: legTimes[0],
-                                arrTime: legTimes[legTimes.length - 1],
-                                airline: legAirline || airline,
-                                aircraft: aircraft,
-                                flightNo: flightNo,
-                                from: airportMatch ? airportMatch[1] : '',
-                                to: airportMatch ? airportMatch[2] : '',
-                                cabinClass: cabin,
-                                legroom: legroom,
-                                amenities: legAmenities
-                            });
-                        }
-                    });
-
-                    // Search for cabin class in main item if not found in legs
-                    if (!mainCabinClass) {
-                        if (text.toLowerCase().includes('ekonomi') || text.toLowerCase().includes('economy')) mainCabinClass = "Ekonomi";
-                        else if (text.toLowerCase().includes('bisnis') || text.toLowerCase().includes('business')) mainCabinClass = "Bisnis";
+                        return {
+                            depTime: legTimes[0].replace(/\s+/g, ' '),
+                            arrTime: legTimes[legTimes.length - 1].replace(/\s+/g, ' '),
+                            airline: fallbackAirline,
+                            aircraft: aircraftMatch ? aircraftMatch[0].replace(/\s+/g, ' ').trim() : '',
+                            flightNo: fnMatch ? (fnMatch[1] + ' ' + fnMatch[2]) : '',
+                            from: airportMatch ? airportMatch[1] : '',
+                            to: airportMatch ? airportMatch[2] : '',
+                            cabinClass: cabin,
+                            legroom,
+                            amenities: legAmenities,
+                            duration: legDuration
+                        };
                     }
 
-                    // Parse layover info from the raw text
+                    // Step 1: Find all tvtJdb layover divs in this flight item
+                    const tvtJdbEls = Array.from(item.querySelectorAll('[class*="tvtJdb"]'));
+
+                    // Step 2: Build layoverMatches from tvtJdb elements
                     const layoverMatches = [];
-                    const layoverRaw = text.match(/(\d+\s*hr\s*\d*\s*min|\d+\s*hr)\s+layover(?:\s+in\s+([^\n]+))?/gi) || [];
-                    layoverRaw.forEach(m => {
-                        const dur = m.match(/(\d+\s*hr\s*\d*\s*min|\d+\s*hr)/i);
-                        const loc = m.match(/layover\s+in\s+(.+)/i);
+                    tvtJdbEls.forEach(ld => {
+                        // Normalize non-breaking spaces
+                        const rawText = ld.innerText.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+                        const durMatch = rawText.match(/(\d+\s*hr(?:s)?\s*\d*\s*min(?:s)?|\d+\s*hr(?:s)?)/i);
+                        // IATA code is in <span dir="ltr">(DXB)</span>
+                        const iataSpan = ld.querySelector('span[dir="ltr"]');
+                        const iataCode = iataSpan ? iataSpan.innerText.replace(/[()]/g, '').trim() : '';
+                        // City name is text before the IATA span (after "layover")
+                        const afterLayover = rawText.replace(/.*?layover\s*/i, '');
+                        const cityName = afterLayover.replace(iataCode, '').replace(/[()]/g, '').trim();
+                        const airportLabel = iataCode
+                            ? (cityName ? `${cityName} (${iataCode})` : `(${iataCode})`)
+                            : cityName;
                         layoverMatches.push({
-                            duration: dur ? dur[0] : m,
-                            airport: loc ? loc[1].trim() : ''
+                            duration: durMatch ? durMatch[0].toLowerCase().replace(/\s+/g, ' ') : rawText,
+                            airport: airportLabel
                         });
                     });
 
-                    // --- Tokens & Detail Extraction ---
+                    // Step 3: If we have tvtJdb layover elements, split text for segments
+                    if (tvtJdbEls.length > 0) {
+                        let fullText = text.replace(/\u00a0/g, ' ');
+                        const legTexts = [];
+                        let remaining = fullText;
+
+                        for (const ld of tvtJdbEls) {
+                            const ldText = ld.innerText.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+                            const splitAt = remaining.indexOf(ldText);
+                            if (splitAt !== -1) {
+                                legTexts.push(remaining.substring(0, splitAt).trim());
+                                remaining = remaining.substring(splitAt + ldText.length).trim();
+                            } else {
+                                legTexts.push(remaining.trim());
+                                remaining = '';
+                            }
+                        }
+                        legTexts.push(remaining.trim());
+
+                        legTexts.forEach((legText) => {
+                            if (!legText) return;
+                            const seg = parseLegText(legText, airline);
+                            if (seg) {
+                                if (seg.cabinClass && !mainCabinClass) mainCabinClass = seg.cabinClass;
+                                if (seg.aircraft && !mainAircraft) mainAircraft = seg.aircraft;
+                                if (seg.legroom && !mainLegroom) mainLegroom = seg.legroom;
+                                seg.amenities.forEach(a => { if (!mainAmenities.includes(a)) mainAmenities.push(a); });
+                                segments.push(seg);
+                            }
+                        });
+                    }
+
+                    // Fallback: parse flat text for cabin/aircraft if no segments found
+                    if (!mainCabinClass) {
+                        const tl = text.toLowerCase();
+                        if (tl.includes('economy')) mainCabinClass = "Economy";
+                        else if (tl.includes('business')) mainCabinClass = "Business";
+                        else if (tl.includes('premium')) mainCabinClass = "Premium Economy";
+                    }
+
+                    // --- Token & Detail Extraction ---
                     let tfu = null;
                     let tfs = null;
                     let aircraft = "";
                     let legroom = "";
                     let amenities = [];
+                    let cabin = "";
+                    let flightNoMain = "";
+                    let airlineMain = "";
+
+                    // Parse main item level if no segments were found
+                    // This handles cases where Google Flights doesn't expand flight details
+                    if (segments.length === 0) {
+                        const mainDetailNodes = item.querySelectorAll('span.Xsgmwe');
+                        mainDetailNodes.forEach((node, idx) => {
+                            const txtString = node.innerText.replace(/\s+/g, ' ').trim();
+                            const txtLow = txtString.toLowerCase();
+                            if (!txtString) return;
+
+                            // Cabin class from jsname="Pvlywd"
+                            if (node.getAttribute('jsname') === 'Pvlywd') {
+                                if (txtLow.includes('ekonomi') || txtLow.includes('economy')) cabin = "Economy";
+                                else if (txtLow.includes('bisnis') || txtLow.includes('business')) cabin = "Business";
+                                else if (txtLow.includes('premium')) cabin = "Premium Economy";
+                                else if (txtLow.includes('first')) cabin = "First Class";
+                                else cabin = txtString;
+                                return;
+                            }
+
+                            // Flight number
+                            const nodeClasses = node.className || "";
+                            const fnMatch = txtString.match(/\b[A-Z0-9]{2}\s?\d{1,4}\b/i);
+                            if ((nodeClasses.includes('sI2Nye') || nodeClasses.includes('QS0io')) && fnMatch && !flightNoMain) {
+                                flightNoMain = fnMatch[0];
+                                return;
+                            }
+
+                            // Aircraft
+                            const aircraftMatch = txtString.match(/(Boeing|Airbus|ATR|Embraer|CRJ|Bombardier)[^\d]*(\d{2,4})/i);
+                            if (aircraftMatch && !aircraft) {
+                                aircraft = txtString.trim();
+                                return;
+                            }
+
+                            // Airline name (first valid span)
+                            if (idx === 0 && !airlineMain && !cabin && !aircraft && txtString.length > 2) {
+                                airlineMain = txtString;
+                            }
+                        });
+                    }
+
+                    // ALSO parse main item for amenities & legroom even if segments exist
+                    // This ensures we get all details from the main flight card
+                    const mainAmenityNodes = item.querySelectorAll('li.WtSsrd');
+                    mainAmenityNodes.forEach(node => {
+                        const txt = node.innerText.replace(/\s+/g, ' ').trim();
+                        const txtLow = txt.toLowerCase();
+                        
+                        // Legroom parsing - multiple formats
+                        if (txtLow.includes('legroom') || txtLow.includes('ruang kaki') || txtLow.includes('above-average')) {
+                            // Format: "Above-average legroom (81 cm)" or "30 in legroom"
+                            const cmMatch = txt.match(/(\d+)\s*cm/i);
+                            const inMatch = txt.match(/(\d+)\s*in/i);
+                            if (cmMatch && !legroom) legroom = cmMatch[0];
+                            else if (inMatch && !legroom) legroom = inMatch[0];
+                            else if (!legroom) legroom = txt.replace(/above-average\s*/i, '').trim();
+                        } else {
+                            // Amenities
+                            if (txtLow.includes('wi-fi') || txtLow.includes('wifi') || txtLow.includes('wi fi')) {
+                                if (!amenities.includes('Wi-Fi')) amenities.push('Wi-Fi');
+                            }
+                            if (txtLow.includes('usb') && !amenities.includes('USB')) amenities.push('USB');
+                            if ((txtLow.includes('outlet') || txtLow.includes('power') || txtLow.includes('daya')) && !amenities.includes('Power')) amenities.push('Power');
+                            if ((txtLow.includes('entertainment') || txtLow.includes('stream') || txtLow.includes('media')) && !amenities.includes('Entertainment')) amenities.push('Entertainment');
+                            if ((txtLow.includes('meal') || txtLow.includes('food') || txtLow.includes('makan')) && !amenities.includes('Meals')) amenities.push('Meals');
+                        }
+                    });
 
                     if (dataId) {
                         dataChunks.forEach(chunk => {
@@ -250,19 +311,22 @@ puppeteer.use(StealthPlugin());
                         const idIndex = pageSource.indexOf(dataId);
                         if (idIndex !== -1) {
                             const searchWindow = pageSource.substring(Math.max(0, idIndex - 8000), Math.min(pageSource.length, idIndex + 4000));
-                            const acMatch = searchWindow.match(/(Airbus\s*A\d{3}|Boeing\s*\d{3}|ATR\s*\d{2}|Embraer\s*\d{3}|CRJ\s*\d{3})/i);
-                            if (acMatch) aircraft = acMatch[0];
+                            const acMatch = searchWindow.match(/(Boeing|Airbus|ATR|Embraer|CRJ|Bombardier)\s*[A-Z]?\d{2,4}/i);
+                            if (acMatch && !aircraft) aircraft = acMatch[0];
 
-                            const lrMatch = searchWindow.match(/(\d+\s*in)\s*legroom/i) ||
-                                searchWindow.match(/legroom\s*\((\d+\s*in)\)/i) ||
-                                searchWindow.match(/pitch\s*of\s*(\d+\s*in)/i);
-                            if (lrMatch) legroom = lrMatch[1] || lrMatch[0];
+                            // Enhanced legroom parsing from search window
+                            const lrMatch = searchWindow.match(/(\d+)\s*cm\s*legroom/i) ||
+                                searchWindow.match(/(\d+\s*in)\s*legroom/i) ||
+                                searchWindow.match(/legroom\s*\((\d+\s*(?:in|cm))\)/i) ||
+                                searchWindow.match(/pitch\s*of\s*(\d+\s*in)/i) ||
+                                searchWindow.match(/(\d+)\s*cm/i);
+                            if (lrMatch && !legroom) legroom = lrMatch[1] || lrMatch[0];
 
-                            // Amenities
-                            if (/wi[\-\s]?fi/i.test(searchWindow)) amenities.push('Wi-Fi');
-                            if (/USB/i.test(searchWindow)) amenities.push('USB');
-                            if (/power|outlet/i.test(searchWindow)) amenities.push('Power');
-                            if (/stream|entertainment/i.test(searchWindow)) amenities.push('Entertainment');
+                            // Amenities from search window
+                            if ((/wi[\-\s]?fi/i.test(searchWindow) || /wifi/i.test(searchWindow)) && !amenities.includes('Wi-Fi')) amenities.push('Wi-Fi');
+                            if (/\bUSB\b/i.test(searchWindow) && !amenities.includes('USB')) amenities.push('USB');
+                            if (/(power|outlet|daya)/i.test(searchWindow) && !amenities.includes('Power')) amenities.push('Power');
+                            if (/(stream|entertainment|hiburan)/i.test(searchWindow) && !amenities.includes('Entertainment')) amenities.push('Entertainment');
 
                             if (!tfu) {
                                 const tfuWinMatch = searchWindow.match(/"(CjR[A-Za-z0-9\+\/\-_]{70,}=*|Cmx[A-Za-z0-9\+\/\-_]{70,}=*)"/);
@@ -284,13 +348,17 @@ puppeteer.use(StealthPlugin());
                     // --- Final Data Merging ---
                     // Prefer aircraft/legroom/amenities from domestic segments if available
                     const finalAircraft = mainAircraft || aircraft;
+                    const finalCabinClass = mainCabinClass || cabin;
                     const finalLegroom = mainLegroom || legroom;
                     const finalAmenities = mainAmenities.length > 0 ? mainAmenities : amenities;
                     
-                    // Aggregate flight numbers from segments or fallback to text regex
+                    // Aggregate flight numbers from segments or fallback to main or text regex
                     let finalFlightNos = segments.map(s => s.flightNo).filter(f => f);
+                    if (finalFlightNos.length === 0 && flightNoMain) {
+                        finalFlightNos = [flightNoMain];
+                    }
                     if (finalFlightNos.length === 0) {
-                        finalFlightNos = text.match(/\b[A-Z0-9]{2}\s?\d{3,4}\b/g) || [];
+                        finalFlightNos = text.match(/\b[A-Z0-9]{2}\s?\d{1,4}\b/g) || [];
                     }
 
                     const stopsCountNum = stopsText === 'Nonstop' ? 0 : parseInt(stopsText) || 0;
@@ -304,7 +372,7 @@ puppeteer.use(StealthPlugin());
                         legroom: finalLegroom, 
                         amenities: finalAmenities,
                         flightNos: [...new Set(finalFlightNos)],
-                        cabinClass: mainCabinClass,
+                        cabinClass: finalCabinClass,
                         segments,
                         layovers: layoverMatches
                     };

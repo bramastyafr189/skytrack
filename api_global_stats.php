@@ -5,9 +5,10 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 $cacheFile = 'cache/cache_global_stats.json';
-$cacheTime = 300; // 5 minutes
+$cacheTime = 60; // Safe 1-minute server-side cache
+$forceUpdate = isset($_GET['force']) && $_GET['force'] == '1';
 
-if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
+if (!$forceUpdate && file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
     echo file_get_contents($cacheFile);
     exit;
 }
