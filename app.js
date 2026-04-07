@@ -11,6 +11,7 @@ let latestTopTracked = []; // Store top tracked flights
 let latestGlobalStats = { last24h: 0, avg7d: 0, trend: 0 }; // Store global stats
 let latestPopularRoutes = { origins: [], destinations: [] }; // Store route stats
 let isGlobalStatsUpdating = false; // Track update state for UI
+let isFleetExpanded = false; // Track fleet list state (collapsed/expanded)
 
 // Helper to format airline names from ICAO codes
 function formatAirlineName(code) {
@@ -1183,17 +1184,25 @@ function renderGlobalHub(activeTab = 'flights') {
                         <ion-icon name="stats-chart" style="color: var(--accent-blue-light); font-size: 16px;"></ion-icon>
                         <h3 style="font-size: 11px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Active Fleet Distribution</h3>
                     </div>
-                    ${latestTopModels.map((m, idx) => `
-                        <div style="margin-bottom: ${idx === latestTopModels.length - 1 ? '0' : '15px'};">
-                            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 6px;">
-                                <span style="font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">${formatAircraftModel(m.model)}</span>
-                                <span style="font-weight: 800; color: var(--accent-blue-light);">${m.count}</span>
+                    <div id="fleetContainer">
+                        ${(isFleetExpanded ? latestTopModels : latestTopModels.slice(0, 10)).map((m, idx, arr) => `
+                            <div style="margin-bottom: ${idx === arr.length - 1 ? '0' : '15px'};">
+                                <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 6px;">
+                                    <span style="font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">${formatAircraftModel(m.model)}</span>
+                                    <span style="font-weight: 800; color: var(--accent-blue-light);">${m.count}</span>
+                                </div>
+                                <div style="height: 4px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden;">
+                                    <div style="height: 100%; width: ${idx === 0 ? '100' : Math.min(100, (m.count / latestTopModels[0].count) * 100)}%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light)); border-radius: 2px;"></div>
+                                </div>
                             </div>
-                            <div style="height: 4px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden;">
-                                <div style="height: 100%; width: ${idx === 0 ? '100' : Math.min(100, (m.count / latestTopModels[0].count) * 100)}%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light)); border-radius: 2px;"></div>
-                            </div>
-                        </div>
-                    `).join('') || '<p style="font-size: 11px; color: var(--text-muted); text-align: center;">Analyzing fleet...</p>'}
+                        `).join('') || '<p style="font-size: 11px; color: var(--text-muted); text-align: center;">Analyzing fleet...</p>'}
+                    </div>
+                    
+                    ${latestTopModels.length > 10 ? `
+                        <button onclick="window.toggleFleetExpansion()" style="margin-top: 15px; width: 100%; padding: 8px; background: rgba(14, 165, 233, 0.05); border: 1px dashed rgba(14, 165, 233, 0.3); border-radius: 8px; color: var(--accent-blue-light); font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                            ${isFleetExpanded ? 'See Less (Top 10)' : `See All Models (${latestTopModels.length})`}
+                        </button>
+                    ` : ''}
                 </div>
 
                 <!-- Manufacturer Global Breakdown -->
@@ -1352,15 +1361,18 @@ function renderGlobalHub(activeTab = 'flights') {
     
     if (activeTab === 'flights') {
         renderFlights(flights, false);
-        // Automate data fetching when entering the 'flights' tab
-        // Note: we trigger a 'manual' force load to satisfy the user's "langsung ambil" request.
         loadRealData(true);
     } else {
         renderDisruptions(disruptions, false);
-        // Automate disruption fetching when entering the 'airports' tab as well
         triggerScrape(true);
     }
 }
+
+window.toggleFleetExpansion = function() {
+    isFleetExpanded = !isFleetExpanded;
+    renderGlobalHub(currentHubTab);
+    if (navigator.vibrate) navigator.vibrate(5);
+};
 
 // Updated navigation state switching
 const navItems = document.querySelectorAll('.nav-item');
