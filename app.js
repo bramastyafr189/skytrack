@@ -12,6 +12,8 @@ let latestGlobalStats = { last24h: 0, avg7d: 0, trend: 0 }; // Store global stat
 let latestPopularRoutes = { origins: [], destinations: [] }; // Store route stats
 let isGlobalStatsUpdating = false; // Track update state for UI
 let isFleetExpanded = false; // Track fleet list state (collapsed/expanded)
+let isHubStatsExpanded = false; // Track departure/arrival hubs list state
+let isAirlinesExpanded = false; // Track airline rankings list state
 
 // Helper to format airline names from ICAO codes
 function formatAirlineName(code) {
@@ -193,11 +195,11 @@ async function loadRealData(isManual = false) {
             throw new Error(jsonData.error || "Failed to fetch scraper data");
         }
         
-        // Only update UI if we are in Radar (home) or in Hub Flights tab
-        const isRadar = !document.querySelector('.segmented-control') && document.getElementById('navRadar').classList.contains('active');
-        const isHubFlights = document.querySelector('.segmented-control') && currentHubTab === 'flights';
+        // Only update UI if we are currently looking at the Hub Flights tab
+        const isHubActive = document.getElementById('navHub').classList.contains('active');
+        const isHubFlights = isHubActive && currentHubTab === 'flights';
         
-        if (isRadar || isHubFlights || isManual) {
+        if (isHubFlights || isManual) {
             lastSyncTime = new Date();
             renderFlights(flights);
         }
@@ -1271,8 +1273,8 @@ function renderGlobalHub(activeTab = 'flights') {
                         <h3 style="font-size: 11px; font-weight: 800; color: var(--text-primary); text-transform: uppercase;">Departures</h3>
                     </div>
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 2px; overflow: hidden;">
-                        ${(latestPopularRoutes.origins || []).map((d, idx) => `
-                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; border-bottom: ${idx === (latestPopularRoutes.origins || []).length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)'};">
+                        ${(latestPopularRoutes.origins || []).slice(0, isHubStatsExpanded ? 25 : 10).map((d, idx, arr) => `
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; border-bottom: ${idx === arr.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)'};">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="width: 26px; height: 26px; flex-shrink: 0; border-radius: 6px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #818cf8; font-family: var(--code-font);">${d.iata}</div>
                                     <span style="font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${formatAirportName(d.iata)}</span>
@@ -1290,8 +1292,8 @@ function renderGlobalHub(activeTab = 'flights') {
                         <h3 style="font-size: 11px; font-weight: 800; color: var(--text-primary); text-transform: uppercase;">Arrivals</h3>
                     </div>
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 2px; overflow: hidden;">
-                        ${(latestPopularRoutes.destinations || []).map((d, idx) => `
-                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; border-bottom: ${idx === (latestPopularRoutes.destinations || []).length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)'};">
+                        ${(latestPopularRoutes.destinations || []).slice(0, isHubStatsExpanded ? 25 : 10).map((d, idx, arr) => `
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; border-bottom: ${idx === arr.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)'};">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="width: 26px; height: 26px; flex-shrink: 0; border-radius: 6px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #10b981; font-family: var(--code-font);">${d.iata}</div>
                                     <span style="font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${formatAirportName(d.iata)}</span>
@@ -1302,6 +1304,15 @@ function renderGlobalHub(activeTab = 'flights') {
                     </div>
                 </div>
             </div>
+
+            <!-- Single Expansion Button for both Departures & Arrivals -->
+            ${(latestPopularRoutes.origins || []).length > 10 || (latestPopularRoutes.destinations || []).length > 10 ? `
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden;">
+                <button onclick="window.toggleHubStatsExpansion()" style="width: 100%; padding: 12px; border: none; background: transparent; color: var(--accent-blue-light); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px;">
+                    <ion-icon name="${isHubStatsExpanded ? 'chevron-up' : 'chevron-down'}" style="font-size: 14px;"></ion-icon>
+                    ${isHubStatsExpanded ? 'Show Less Hub Details' : 'Show More Hub Details'}
+                </button>
+            </div>` : ''}
 
             <!-- Global Carrier Power Rankings -->
             <div style="margin-top: 8px;">
@@ -1314,7 +1325,7 @@ function renderGlobalHub(activeTab = 'flights') {
                     <ion-icon name="globe-outline" style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; color: rgba(255,255,255,0.02); transform: rotate(-15deg);"></ion-icon>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                        ${latestTopAirlines.map((a, idx) => `
+                        ${latestTopAirlines.slice(0, isAirlinesExpanded ? 25 : 10).map((a, idx) => `
                             <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                                 <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
                                     <div style="width: 28px; height: 28px; background: ${idx < 3 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: ${idx < 3 ? '#000' : '#fff'}; flex-shrink: 0;">${idx + 1}</div>
@@ -1330,6 +1341,15 @@ function renderGlobalHub(activeTab = 'flights') {
                             </div>
                         `).join('') || '<p style="padding: 20px; font-size: 11px; color: var(--text-muted); text-align: center;">Ranking global carriers...</p>'}
                     </div>
+
+                    <!-- Airline Expansion Button -->
+                    ${latestTopAirlines.length > 10 ? `
+                    <div style="margin-top: 15px; display: flex; justify-content: center;">
+                        <button onclick="window.toggleAirlinesExpansion()" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 8px 20px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                            <ion-icon name="${isAirlinesExpanded ? 'chevron-up' : 'chevron-down'}"></ion-icon>
+                            ${isAirlinesExpanded ? 'Show Top 10 Only' : `Show All ${latestTopAirlines.length} Power Carriers`}
+                        </button>
+                    </div>` : ''}
                 </div>
             </div>
         </div>
@@ -1370,6 +1390,18 @@ function renderGlobalHub(activeTab = 'flights') {
 
 window.toggleFleetExpansion = function() {
     isFleetExpanded = !isFleetExpanded;
+    renderGlobalHub(currentHubTab);
+    if (navigator.vibrate) navigator.vibrate(5);
+};
+
+window.toggleHubStatsExpansion = function() {
+    isHubStatsExpanded = !isHubStatsExpanded;
+    renderGlobalHub(currentHubTab);
+    if (navigator.vibrate) navigator.vibrate(5);
+};
+
+window.toggleAirlinesExpansion = function() {
+    isAirlinesExpanded = !isAirlinesExpanded;
     renderGlobalHub(currentHubTab);
     if (navigator.vibrate) navigator.vibrate(5);
 };

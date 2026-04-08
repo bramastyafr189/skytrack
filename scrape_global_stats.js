@@ -254,9 +254,9 @@ puppeteer.use(StealthPlugin());
                     }
                     
                     const topModels = Object.entries(modelCounts).sort((a,b)=>b[1]-a[1]).slice(0,25).map(x=>({model:x[0], count:x[1]}));
-                    const topOrigins = Object.entries(originCounts).sort((a,b)=>b[1]-a[1]).slice(0,15).map(x=>({iata:x[0], count:x[1]}));
-                    const topDests = Object.entries(destCounts).sort((a,b)=>b[1]-a[1]).slice(0,15).map(x=>({iata:x[0], count:x[1]}));
-                    const topAirlines = Object.entries(airlineCounts).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>({code:x[0], count:x[1]}));
+                    const topOrigins = Object.entries(originCounts).sort((a,b)=>b[1]-a[1]).slice(0,25).map(x=>({iata:x[0], count:x[1]}));
+                    const topDests = Object.entries(destCounts).sort((a,b)=>b[1]-a[1]).slice(0,25).map(x=>({iata:x[0], count:x[1]}));
+                    const topAirlines = Object.entries(airlineCounts).sort((a,b)=>b[1]-a[1]).slice(0,25).map(x=>({code:x[0], count:x[1]}));
                     const topBrands = Object.entries(brandCounts).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>({brand:x[0], count:x[1]}));
 
                     return { 
